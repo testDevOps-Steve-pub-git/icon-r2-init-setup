@@ -1,0 +1,31 @@
+BLUEMIX INSTALL
+---------------
+In Bluemix create Compose for PostgreSQL service instance, name "icon-postgresql". It takes a few minutes for the service to be created.
+
+Select the new service "icon-postgresql" and click on tab "Service Credentials".
+
+Select the Action to "View Credentials" and record the uri (database connection string). 
+For example. "postgres://admin:DCGKBBJKUVXBDJLQ@sl-us-dal-9-portal.4.dblayer.com:17673/compose".
+
+Using a local database tool, configure a connection using the components of the recorded uri.
+
+
+BLUEMIX POPULATE
+----------------
+Follow the same instructions as local populate, but using the Bluemix DEV connection. 
+You will be prompted for password.
+$ psql -h sl-us-dal-9-portal.4.dblayer.com -p 17673 -d compose -U admin -a -f 1_Add_Roles.sql
+$ psql -h sl-us-dal-9-portal.4.dblayer.com -p 17673 -d compose -U admin -a -f 2_Create_Lookup_DB.sql
+$ psql -h sl-us-dal-9-portal.4.dblayer.com -p 17673 -d compose -U admin -a -f 3_Create_Submit_DB.sql
+$ tar xvf 4_Geocode_Data.sql.zip
+$ psql -h sl-us-dal-9-portal.4.dblayer.com -p 17673 -d compose -U admin -f 4_Geocode_Data.sql
+$ psql -h sl-us-dal-9-portal.4.dblayer.com -p 17673 -d compose -U admin -a -f 5_Lookup_Data.sql
+
+Follow the same instructions as local populate, but using the Bluemix STG connection.
+You will be prompted for password.
+$ psql -h sl-us-dal-9-portal.6.dblayer.com -p 20526 -d compose -U admin -a -f 1_Add_Roles.sql
+$ psql -h sl-us-dal-9-portal.6.dblayer.com -p 20526 -d compose -U admin -a -f 2_Create_Lookup_DB.sql
+$ psql -h sl-us-dal-9-portal.6.dblayer.com -p 20526 -d compose -U admin -a -f 3_Create_Submit_DB.sql
+$ tar xvf 4_Geocode_Data.sql.zip
+$ psql -h sl-us-dal-9-portal.6.dblayer.com -p 20526 -d compose -U admin -f 4_Geocode_Data.sql
+$ psql -h sl-us-dal-9-portal.6.dblayer.com -p 20526 -d compose -U admin -a -f 5_Lookup_Data.sql
