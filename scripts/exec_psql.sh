@@ -1,0 +1,1 @@
+psql -U admin -d compose -p $PORT -h $HOST  -f /tmp/scripts/1_Add_Roles.sql
