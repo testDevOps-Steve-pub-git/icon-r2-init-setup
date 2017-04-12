@@ -1,5 +1,8 @@
+#!/bin/bash
+
 while [ 1 ]
 do 
+ echo "something"
   sleep 5
 done
 # retrive credential from VCAP. 
