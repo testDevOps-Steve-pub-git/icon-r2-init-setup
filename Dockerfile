@@ -1,5 +1,6 @@
 FROM postgres
 COPY ./* /tmp/scripts/
+COPY scripts/* /tmp/scripts/
 
 # Run PSQL scripts
-RUN /tmp/scripts/scripts/exec_psql.sh
+ENTRYPOINT /tmp/scripts/exec_psql.sh
