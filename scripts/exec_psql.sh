@@ -13,7 +13,7 @@ DBNAME=$(echo $URL | cut -d ':' -f 4 | cut -d '/' -f 2)
 
 echo "Preparing for SQL scripting"
 runPSQL() {
-  psql -U $USER -d $DBNAME -p $PORT -h $HOST --no-password -f /tmp/scripts/$1
+  psql -U $USER -d $DBNAME -p $PORT -h $HOST --no-password -f $1
 }
 
 echo "Running Drop_DB.sql"
@@ -28,12 +28,12 @@ runPSQL 2_Create_Lookup_DB.sql
 echo "Running 3_Create_Submit_DB.sql"
 runPSQL 3_Create_Submit_DB.sql
 
-echo "Unzip 4_Geocode_Data.sql.zip and running 4_Geocode_Data.sql"
-tar xvf 4_Geocode_Data.sql.zip
-runPSQL 4_Geocode_Data.sql
+echo "Unzip 4_Geocode_Data.sql.zip and run 4_Geocode_Data.sql"
+
+gzip -d 4_Geocode_Data.sql.zip
+#runPSQL 4_Geocode_Data.sql
 
 echo "Running 5_Lookup_Data.sql"
 runPSQL 5_Lookup_Data.sql
-
 
 echo "PSQL scripting completed"
