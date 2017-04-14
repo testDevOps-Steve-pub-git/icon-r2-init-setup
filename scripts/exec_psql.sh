@@ -30,8 +30,8 @@ runPSQL 3_Create_Submit_DB.sql
 
 echo "Unzip 4_Geocode_Data.sql.zip and run 4_Geocode_Data.sql"
 
-gzip -d 4_Geocode_Data.sql.zip
-#runPSQL 4_Geocode_Data.sql
+unzip  4_Geocode_Data.sql.zip
+runPSQL 4_Geocode_Data.sql
 
 echo "Running 5_Lookup_Data.sql"
 runPSQL 5_Lookup_Data.sql
