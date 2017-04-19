@@ -10,7 +10,6 @@ HOST=$(echo $URL | cut -d ':' -f 3 | cut -d '@' -f 2)
 PORT=$(echo $URL | cut -d ':' -f 4 | cut -d '/' -f 1)
 DBNAME=$(echo $URL | cut -d ':' -f 4 | cut -d '/' -f 2)
 
-
 echo "Preparing for SQL scripting"
 runPSQL() {
   psql -U $USER -d $DBNAME -p $PORT -h $HOST --no-password -f $1
@@ -29,7 +28,6 @@ echo "Running 3_Create_Submit_DB.sql"
 runPSQL 3_Create_Submit_DB.sql
 
 echo "Unzip 4_Geocode_Data.sql.zip and run 4_Geocode_Data.sql"
-
 unzip  4_Geocode_Data.sql.zip
 runPSQL 4_Geocode_Data.sql
 

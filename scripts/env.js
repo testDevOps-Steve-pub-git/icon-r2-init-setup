@@ -1,36 +1,45 @@
-var obj = require('./services.json')
 var fs = require('fs')
+var exec = require('child_process').exec
 
-var iconelasticsearch = obj['compose-for-elasticsearch'][0]['credentials']['uri']
-var iconpostgresql = obj['compose-for-postgresql'][0]['credentials']['uri']
-var iconrabbitmq = obj['compose-for-rabbitmq'][0]['credentials']['uri']
+let store = {}
 
-var JWT_TOKEN_SECRET_KEY = obj['user-provided'][0]['credentials']['JWT_TOKEN_SECRET_KEY']
-var CRYPTO_PASSWORD = obj['user-provided'][0]['credentials']['CRYPTO_PASSWORD']
-
-var POSTGRES_READONLY_ROLE = obj['user-provided'][0]['credentials']['POSTGRES_READONLY_ROLE']
-var PHIX_ENDPOINT_DICTIONARY = obj['user-provided'][0]['credentials']['PHIX_ENDPOINT_DICTIONARY']
-var CLAMAV_ENDPOINT = obj['user-provided'][0]['credentials']['CLAMAV_ENDPOINT']
-var PHIX_ENDPOINT_SUBMISSION = obj['user-provided'][0]['credentials']['PHIX_ENDPOINT_SUBMISSION']
-var PHIX_ENDPOINT_SUBMISSION_TOKEN = obj['user-provided'][0]['credentials']['PHIX_ENDPOINT_SUBMISSION_TOKEN']
-var PHIX_ENDPOINT_RETRIEVAL = obj['user-provided'][0]['credentials']['PHIX_ENDPOINT_RETRIEVAL']
-var PHIX_ENDPOINT_RETRIEVAL_TOKEN = obj['user-provided'][0]['credentials']['PHIX_ENDPOINT_RETRIEVAL_TOKEN']
-
-var json = {
-  'icon-elasticsearch': iconelasticsearch,
-  'icon-postgresql': iconpostgresql,
-  'icon-rabbitmq': iconrabbitmq,
-  JWT_TOKEN_SECRET_KEY,
-  CRYPTO_PASSWORD,
-  POSTGRES_READONLY_ROLE,
-  PHIX_ENDPOINT_DICTIONARY,
-  CLAMAV_ENDPOINT,
-  PHIX_ENDPOINT_SUBMISSION,
-  PHIX_ENDPOINT_SUBMISSION_TOKEN,
-  PHIX_ENDPOINT_RETRIEVAL,
-  PHIX_ENDPOINT_RETRIEVAL_TOKEN
+var parseService = (serviceName, credentialsName) => {
+  return new Promise((resolve, reject) => {
+    exec('cf curl -X GET /v2/service_keys/$(cf service-key ' + serviceName + ' ' + credentialsName + ' --guid)', (error, stdout, stderr) => {
+      if (error) {
+        reject(error)
+      } else {
+        let uri = JSON.parse(stdout)['entity']['credentials']['uri']
+        store[serviceName] = uri
+        resolve(store)
+      }
+    })
+  })
 }
 
-fs.writeFile('local.json', JSON.stringify(json), function (err) {
-  if (err) throw err
+var parseUserProvidedService = (serviceName) => {
+  return new Promise((resolve, reject) => {
+    exec('cf curl -X GET /v2/user_provided_service_instances/$(cf service ' + serviceName + ' --guid)', (error, stdout, stderr) => {
+      if (error) {
+        reject(error)
+      } else {
+        let creds = JSON.parse(stdout)['entity']['credentials']
+        for (var key in creds) {
+          store[key] = creds[key]
+        }
+        resolve(store)
+      }
+    })
+  })
+}
+
+let es = parseService('icon-elasticsearch', 'Credentials-1')
+let pgl = parseService('icon-postgresql', 'CCS-srv-binding-icon_setup_7-1492143347.94')
+let rmq = parseService('icon-rabbitmq', 'Credentials-1')
+let ups = parseUserProvidedService('env_setup')
+
+Promise.all([es, pgl, rmq, ups]).then(result => {
+  fs.writeFile('local.json', JSON.stringify(result[3]), (err) => {
+    if (err) throw err
+  })
 })
