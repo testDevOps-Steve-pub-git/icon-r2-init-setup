@@ -1,22 +1,55 @@
-#!/bin/sh
-
-if [ $# -eq 0 ]
-  then
-    echo  'usage: bash create-user-provided-service.sh <file path to JSON file> <app name to bind the service to>'
+#!/bin/bash
+usage(){
+    echo  'usage: bash create-user-provided-service.sh [-f  <file path to JSON file>] '
     echo 'Make sure you are in the right space and trying logging in using cf login'
-  else
-    json_file=$1
 
-    if [ "$json_file" ]
-    then
-        UPS=$(cf services | grep env_setup)
-        if [ -z "$UPS" ] 
-        then
-            cf cups env_setup -p $json_file
-        else
-            cf uups env_setup -p $json_file
-        fi
-    else
-        echo 'Unable to create/bind the service: invalid path or file does not exist or check your app name'
-    fi
+}
+
+FILE="creds.json"
+HASFILE=
+while getopts "f:" OPTIONS
+do
+    case $OPTIONS in
+        f) 
+            FILE=$OPTARG
+            HASFILE=1
+            ;;
+    esac
+done
+
+if [ ! -z HASFILE ]
+then
+    echo "REMOVE CRED.JSON IF EXIST"
+    rm $FILE
+    echo "CREATE TEMP FILE WITH configuration from env"
+    echo "{" > creds.json
+    echo "\"CLAMAV_ENDPOINT\":\"$CLAMAV_ENDPOINT\"," >> creds.json
+    echo "\"CRYPTO_PASSWORD\":\"$CRYPTO_PASSWORD\"," >> creds.json
+    echo "\"JWT_TOKEN_SECRET_KEY\":\"$JWT_TOKEN_SECRET_KEY\"," >> creds.json
+    echo "\"PHIX_ENDPOINT_DICTIONARY\":\"$PHIX_ENDPOINT_DICTIONARY\"," >> creds.json
+    echo "\"PHIX_ENDPOINT_RETRIEVAL\":\"$PHIX_ENDPOINT_RETRIEVAL\"," >> creds.json
+    echo "\"PHIX_ENDPOINT_RETRIEVAL_TOKEN\":\"$PHIX_ENDPOINT_RETRIEVAL_TOKEN\"," >> creds.json
+    echo "\"PHIX_ENDPOINT_SUBMISSION_TOKEN\":\"$PHIX_ENDPOINT_SUBMISSION_TOKEN\"," >> creds.json
+    echo "\"POSTGRES_READONLY_ROLE\":\"$POSTGRES_READONLY_ROLE\"," >> creds.json
+    echo "\"TZ\":\"$TZ\"" >> creds.json
+    echo "}" >> creds.json
+else
+    echo "USE $FILE"
+fi
+
+
+
+echo "CREATE USER PROVIDED"
+UPS=$(cf services | grep env_setup)
+if [ -z "$UPS" ] 
+then
+    cf cups env_setup -p $FILE
+else
+   cf uups env_setup -p $FILE
+fi
+
+echo "DELETE TEMP FILE"
+if [ -z HASFILE ]
+then
+    rm $FILE
 fi
