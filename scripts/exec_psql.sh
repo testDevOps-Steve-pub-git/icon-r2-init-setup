@@ -27,9 +27,19 @@ runPSQL 2_Create_Lookup_DB.sql
 echo "Running 3_Create_Submit_DB.sql"
 runPSQL 3_Create_Submit_DB.sql
 
-echo "Unzip 4_Geocode_Data.sql.zip and run 4_Geocode_Data.sql"
+echo "Unzip 4_Geocode_Data.sql.zip"
 unzip  4_Geocode_Data.sql.zip
+echo "Run 4_Geocode_Data.sql"
 runPSQL 4_Geocode_Data.sql
+
+
+#echo "Unzip canada.add.zip"
+#unzip canada.add.zip
+#echo "AWK canada.add into sql script"
+#awk -f gen_geo_etl.awk canada.add > load_canada.sql
+#cat load_canada.sql | wc -l
+#echo "Running canada.add.psql"
+#runPSQL load_canada.sql
 
 echo "Running 5_Lookup_Data.sql"
 runPSQL 5_Lookup_Data.sql

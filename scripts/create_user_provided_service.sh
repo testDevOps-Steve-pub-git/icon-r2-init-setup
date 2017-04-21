@@ -23,6 +23,7 @@ then
     rm $FILE
     echo "CREATE TEMP FILE WITH configuration from env"
     echo "{" > creds.json
+    echo "\"PHIX_ENDPOINT_SUBMISSION\":\"$PHIX_ENDPOINT_SUBMISSION\"," >> creds.json
     echo "\"CLAMAV_ENDPOINT\":\"$CLAMAV_ENDPOINT\"," >> creds.json
     echo "\"CRYPTO_PASSWORD\":\"$CRYPTO_PASSWORD\"," >> creds.json
     echo "\"JWT_TOKEN_SECRET_KEY\":\"$JWT_TOKEN_SECRET_KEY\"," >> creds.json
