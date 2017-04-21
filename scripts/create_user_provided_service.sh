@@ -20,7 +20,10 @@ done
 if [ ! -z HASFILE ]
 then
     echo "REMOVE CRED.JSON IF EXIST"
-    rm $FILE
+    if [ -f $FILE ]
+    then
+        rm $FILE
+    fi
     echo "CREATE TEMP FILE WITH configuration from env"
     echo "{" > creds.json
     echo "\"PHIX_ENDPOINT_SUBMISSION\":\"$PHIX_ENDPOINT_SUBMISSION\"," >> creds.json
