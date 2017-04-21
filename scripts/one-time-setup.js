@@ -8,15 +8,13 @@ let esUserDefinedName = 'icon-elasticsearch'
 let pglUserDefinedName = 'icon-postgresql'
 let rmqUserDefinedName = 'icon-rabbitmq'
 
-let isError = false
-
 var checkService = (serviceName) => {
   return new Promise((resolve, reject) => {
-    exec('cf services | grep ' +  serviceName + ' | wc -l', (error, stdout, stderr) => {
+    exec('cf service  ' +  serviceName + ' --guid | wc -l', (error, stdout, stderr) => {
       if (error) {
         reject(error)
       } else {
-        if(stdout == 0){
+        if(stdout != 1){
           resolve('Service does not exist: ' + serviceName)
         }else{
           reject('Service ' + serviceName + ' already exists')
@@ -53,21 +51,23 @@ var createServiceKey = (userDefinedName, credentialsName) => {
 var promisify = (serviceName, userDefinedName) => {
   checkService(userDefinedName).then((result) => {
     console.log(result)
+    resolve(result)
     createService(serviceName, userDefinedName).then((result) => {
        console.log(result)
+       resolve(result)
       createServiceKey(userDefinedName, 'Credentials-1').then(result => {
         console.log(result)
       }, (error) => {
         console.log(error)
-        isError = true
+        process.exit(1)
       })
     }, (error) => {
       console.log(error)
-      isError = true
+      process.exit(1)
     })
   }).catch(error =>{
     console.log(error)
-    isError = true
+    process.exit(1)
   })
 }
 
@@ -75,7 +75,3 @@ console.log('Creating services...')
 promisify(esServiceName, esUserDefinedName)
 promisify(pglServiceName, pglUserDefinedName)
 promisify(rmqServiceName, rmqUserDefinedName)
-
-if (isError) {
-  process.exit(1)
-}
