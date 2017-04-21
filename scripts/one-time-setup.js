@@ -51,10 +51,8 @@ var createServiceKey = (userDefinedName, credentialsName) => {
 var promisify = (serviceName, userDefinedName) => {
   checkService(userDefinedName).then((result) => {
     console.log(result)
-    resolve(result)
     createService(serviceName, userDefinedName).then((result) => {
        console.log(result)
-       resolve(result)
       createServiceKey(userDefinedName, 'Credentials-1').then(result => {
         console.log(result)
       }, (error) => {
