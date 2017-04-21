@@ -24,7 +24,6 @@ var checkService = (serviceName) => {
   })
 }
 
-
 var createService = (serviceName, userDefinedName) => {
   return new Promise((resolve, reject) => {
     exec('cf create-service ' + serviceName + ' Standard ' + userDefinedName, (error, stdout, stderr) => {
@@ -51,13 +50,6 @@ var createServiceKey = (userDefinedName, credentialsName) => {
   })
 }
 
-
-
-
-
-
-
-
 let esCheck = checkService(esUserDefinedName)
 let pglCheck = checkService(pglUserDefinedName)
 let rmqCheck = checkService(rmqUserDefinedName)
@@ -78,13 +70,7 @@ Promise.all([esCheck, pglCheck, rmqCheck]).then((result) => {
       console.log('compose service keys created')
     })
   })
-
-
-}
-).catch((reason)=>{
+}).catch((reason)=>{
    console.log('services already exist, stop creating services')
   process.exit(1)
-    
 })
-
-
