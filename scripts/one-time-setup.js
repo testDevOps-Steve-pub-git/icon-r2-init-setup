@@ -8,16 +8,18 @@ let esUserDefinedName = 'icon-elasticsearch'
 let pglUserDefinedName = 'icon-postgresql'
 let rmqUserDefinedName = 'icon-rabbitmq'
 
+let isError = false
+
 var checkService = (serviceName) => {
   return new Promise((resolve, reject) => {
-    exec('cf services | grep ' +  serviceName, (error, stdout, stderr) => {
+    exec('cf services | grep ' +  serviceName + ' | wc -l', (error, stdout, stderr) => {
       if (error) {
-        reject('done')
+        reject(error)
       } else {
-        if(stdout == ''){
-          resolve()
+        if(stdout == 0){
+          resolve('Service does not exist: ' + serviceName)
         }else{
-          reject()
+          reject('Service ' + serviceName + ' already exists')
         }
       }
     })
@@ -30,8 +32,7 @@ var createService = (serviceName, userDefinedName) => {
       if (error) {
         reject(error)
       } else {
-        console.log('service created: ', serviceName)
-        resolve('done')
+        resolve('Service created: ' + serviceName)
       }
     })
   })
@@ -43,34 +44,38 @@ var createServiceKey = (userDefinedName, credentialsName) => {
       if (error) {
         reject(error)
       } else {
-        console.log('service-key created: ', userDefinedName)
-        resolve('done')
+        resolve('service-key created: ' + userDefinedName)
       }
     })
   })
 }
 
-let esCheck = checkService(esUserDefinedName)
-let pglCheck = checkService(pglUserDefinedName)
-let rmqCheck = checkService(rmqUserDefinedName)
-
-Promise.all([esCheck, pglCheck, rmqCheck]).then((result) => {
-  console.log('start creating services')
-  let es = createService(esServiceName, esUserDefinedName)
-  let pgl = createService(pglServiceName, pglUserDefinedName)
-  let rmq = createService(rmqServiceName, rmqUserDefinedName)
-
-  Promise.all([es, pgl, rmq]).then((result) => {
-    console.log('compose service created')
-    let esk = createServiceKey(esUserDefinedName, 'Credentials-1')
-    let pglk = createServiceKey(pglUserDefinedName, 'Credentials-1')
-    let rmqk = createServiceKey(rmqUserDefinedName, 'Credentials-1')
-
-    Promise.all([esk, pglk, rmqk]).then((result) => {
-      console.log('compose service keys created')
+var promisify = (serviceName, userDefinedName) => {
+  checkService(userDefinedName).then((result) => {
+    console.log(result)
+    createService(serviceName, userDefinedName).then((result) => {
+       console.log(result)
+      createServiceKey(userDefinedName, 'Credentials-1').then(result => {
+        console.log(result)
+      }, (error) => {
+        console.log(error)
+        isError = true
+      })
+    }, (error) => {
+      console.log(error)
+      isError = true
     })
+  }).catch(error =>{
+    console.log(error)
+    isError = true
   })
-}).catch((reason)=>{
-   console.log('services already exist, stop creating services')
+}
+
+console.log('Creating services...')
+promisify(esServiceName, esUserDefinedName)
+promisify(pglServiceName, pglUserDefinedName)
+promisify(rmqServiceName, rmqUserDefinedName)
+
+if (isError) {
   process.exit(1)
-})
+}
