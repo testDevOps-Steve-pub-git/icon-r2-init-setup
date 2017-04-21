@@ -80,7 +80,9 @@ Promise.all([esCheck, pglCheck, rmqCheck]).then((result) => {
 
 }
 ).catch((reason)=>{
-    console.log('services already exist, stop creating services')
+   console.log('services already exist, stop creating services')
+  process.exit(1)
+    
 })
 
 
