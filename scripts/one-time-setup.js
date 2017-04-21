@@ -10,15 +10,17 @@ let rmqUserDefinedName = 'icon-rabbitmq'
 
 var checkService = (serviceName) => {
   return new Promise((resolve, reject) => {
-    exec('cf service ' + serviceName + ' --guid', (error, stdout, stderr) => {
+    exec('cf services | grep ' +  serviceName, (error, stdout, stderr) => {
       if (error) {
-        resolve('done')
+        reject('done')
       } else {
-        reject(error)
+        if(stdout == ''){
+          resolve()
+        }else{
+          reject()
+        }
       }
     })
-
-
   })
 }
 
