@@ -1,8 +1,31 @@
 var exec = require('child_process').exec
 
-var createService = (serviceName, userName) => {
+let esServiceName = 'compose-for-elasticsearch'
+let pglServiceName = 'compose-for-postgresql'
+let rmqServiceName = 'compose-for-rabbitmq'
+
+let esUserDefinedName = 'icon-elasticsearch'
+let pglUserDefinedName = 'icon-postgresql'
+let rmqUserDefinedName = 'icon-rabbitmq'
+
+var checkService = (serviceName) => {
   return new Promise((resolve, reject) => {
-    exec('cf create-service ' + serviceName + ' Standard ' + userName, (error, stdout, stderr) => {
+    exec('cf service ' + serviceName + ' --guid', (error, stdout, stderr) => {
+      if (error) {
+        resolve('done')
+      } else {
+        reject(error)
+      }
+    })
+
+
+  })
+}
+
+
+var createService = (serviceName, userDefinedName) => {
+  return new Promise((resolve, reject) => {
+    exec('cf create-service ' + serviceName + ' Standard ' + userDefinedName, (error, stdout, stderr) => {
       if (error) {
         reject(error)
       } else {
@@ -13,30 +36,51 @@ var createService = (serviceName, userName) => {
   })
 }
 
-var createServiceKey = (userName, credentialsName) => {
+var createServiceKey = (userDefinedName, credentialsName) => {
   return new Promise((resolve, reject) => {
-    exec('cf create-service-key ' + userName + ' ' + credentialsName, (error, stdout, stderr) => {
+    exec('cf create-service-key ' + userDefinedName + ' ' + credentialsName, (error, stdout, stderr) => {
       if (error) {
         reject(error)
       } else {
-        console.log('service-key created: ', userName)
+        console.log('service-key created: ', userDefinedName)
         resolve('done')
       }
     })
   })
 }
 
-let es = createService('compose-for-elasticsearch', 'icon-elasticsearch')
-let pgl = createService('compose-for-postgresql', 'icon-postgresql')
-let rmq = createService('compose-for-rabbitmq', 'icon-rabbitmq')
 
-Promise.all([es, pgl, rmq]).then((result) => {
-  console.log('compose service created')
-  let esk = createServiceKey('icon-elasticsearch', 'Credentials-1')
-  let pglk = createServiceKey('icon-postgresql', 'CCS-srv-binding-icon_setup_7-1492143347.94')
-  let rmqk = createServiceKey('icon-rabbitmq', 'Credentials-1')
 
-  Promise.all([esk, pglk, rmqk]).then((result) => {
-    console.log('compose service keys created')
+
+
+
+
+
+let esCheck = checkService(esUserDefinedName)
+let pglCheck = checkService(pglUserDefinedName)
+let rmqCheck = checkService(rmqUserDefinedName)
+
+Promise.all([esCheck, pglCheck, rmqCheck]).then((result) => {
+  console.log('start creating services')
+  let es = createService(esServiceName, esUserDefinedName)
+  let pgl = createService(pglServiceName, pglUserDefinedName)
+  let rmq = createService(rmqServiceName, rmqUserDefinedName)
+
+  Promise.all([es, pgl, rmq]).then((result) => {
+    console.log('compose service created')
+    let esk = createServiceKey(esUserDefinedName, 'Credentials-1')
+    let pglk = createServiceKey(pglUserDefinedName, 'Credentials-1')
+    let rmqk = createServiceKey(rmqUserDefinedName, 'Credentials-1')
+
+    Promise.all([esk, pglk, rmqk]).then((result) => {
+      console.log('compose service keys created')
+    })
   })
+
+
+}
+).catch((reason)=>{
+    console.log('services already exist, stop creating services')
 })
+
+

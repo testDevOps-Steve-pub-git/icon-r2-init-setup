@@ -34,7 +34,7 @@ var parseUserProvidedService = (serviceName) => {
 }
 
 let es = parseService('icon-elasticsearch', 'Credentials-1')
-let pgl = parseService('icon-postgresql', 'CCS-srv-binding-icon_setup_7-1492143347.94')
+let pgl = parseService('icon-postgresql', 'Credentials-1')
 let rmq = parseService('icon-rabbitmq', 'Credentials-1')
 let ups = parseUserProvidedService('env_setup')
 

@@ -31,6 +31,7 @@ then
     echo "\"PHIX_ENDPOINT_RETRIEVAL\":\"$PHIX_ENDPOINT_RETRIEVAL\"," >> creds.json
     echo "\"PHIX_ENDPOINT_RETRIEVAL_TOKEN\":\"$PHIX_ENDPOINT_RETRIEVAL_TOKEN\"," >> creds.json
     echo "\"PHIX_ENDPOINT_SUBMISSION_TOKEN\":\"$PHIX_ENDPOINT_SUBMISSION_TOKEN\"," >> creds.json
+        echo "\"PHIX_ENDPOINT_SUBMISSION\":\"$PHIX_ENDPOINT_SUBMISSION\"," >> creds.json
     echo "\"POSTGRES_READONLY_ROLE\":\"$POSTGRES_READONLY_ROLE\"," >> creds.json
     echo "\"TZ\":\"$TZ\"" >> creds.json
     echo "}" >> creds.json
