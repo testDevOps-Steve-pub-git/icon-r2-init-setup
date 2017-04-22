@@ -17,7 +17,7 @@ do
     esac
 done
 
-if [ ! -z HASFILE ]
+if [ -z $HASFILE ]
 then
     echo "REMOVE CRED.JSON IF EXIST"
     if [ -f $FILE ]
