@@ -1,0 +1,13 @@
+--- web/pgAdmin4.py
++++ web/pgAdmin4.py
+@@ -100,7 +100,9 @@
+         # the process-executor.
+         #
+         # Setting PYTHONHOME launch them properly.
+-        os.environ['PYTHONHOME'] = sys.prefix
++        from pgadmin.utils import IS_WIN
++        if IS_WIN:
++            os.environ['PYTHONHOME'] = sys.prefix
+ 
+     try:
+         app.run(
