@@ -51,6 +51,8 @@ CREATE TABLE agents
     prevalence_index prevalence_range,
     ontario_start_year int,
     ontario_finish_year int,
+    ordered_diseases_fr varchar(200),
+    ordered_diseases_en varchar(200),
   CONSTRAINT agents_pkey PRIMARY KEY (snomed)
 );
 
@@ -165,65 +167,41 @@ CREATE INDEX trades_jf_idx ON trades(panorama_name);
 
 CREATE OR REPLACE VIEW diseases_index AS
   SELECT
-    snomed,
-    friendly_en_name,
-    friendly_fr_name,
-    yellow_card_order,
-    json_build_object('snomed', snomed,
-                      'yellowCardOrder', yellow_card_order,
-                      'longName', json_build_object ('en', friendly_en_name,
-                                                     'fr', friendly_fr_name)) AS json
+    (snomed)::text AS "snomed",
+    yellow_card_order AS "yellowCardOrder",
+    json_build_object ('en', friendly_en_name,
+                       'fr', friendly_fr_name) AS "longName"
   FROM diseases;
 
 CREATE OR REPLACE VIEW agents_index AS
-SELECT
-    agents.snomed,
-    agents.short_en_name,
-    agents.short_fr_name,
-    agents.long_en_name,
-    agents.long_fr_name,
-    agents.is_user_view,
-    agents.prevalence_index,
-    agents.ontario_start_year,
-    agents.ontario_finish_year,
-    json_build_object('snomed', agents.snomed,
-                      'shortName', json_build_object('en', agents.short_en_name,
-                                                     'fr', agents.short_fr_name),
-                      'longName',  json_build_object('en', agents.long_en_name,
-                                                     'fr', agents.long_fr_name),
-                      'prevalenceIndex', agents.prevalence_index,
-                      'ontarioStartYear', agents.ontario_start_year,
-                      'ontarioFinishYear', agents.ontario_finish_year) AS json
+  SELECT
+    (snomed)::text AS "snomed",
+    json_build_object('en', short_en_name,
+                      'fr', short_fr_name) AS "shortName",
+    json_build_object('en', long_en_name,
+                      'fr', long_fr_name) AS "longName",
+    is_user_view AS "isUserView",
+    prevalence_index AS "prevalenceIndex",
+    ontario_start_year AS "ontarioStartYear",
+    ontario_finish_year AS "ontarioFinishYear"
   FROM agents;
-
+  
 CREATE OR REPLACE VIEW trades_index AS
   SELECT
-    trades.snomed,
-    trades.friendly_en_name,
-    trades.friendly_fr_name,
-    trades.manufacturer,
-    trades.ontario_start_year,
-    trades.ontario_finish_year,
-    trades.prevalence_index,
-    trades.panorama_name,
-    json_build_object('snomed', trades.snomed,
-                      'longName', json_build_object('en', trades.friendly_en_name,
-                                                      'fr', trades.friendly_fr_name),
-                      'manufacturer', trades.manufacturer,
-                      'ontarioStartYear', trades.ontario_start_year,
-                      'ontarioFinishYear', trades.ontario_finish_year,
-                      'prevalenceIndex', trades.prevalence_index,
-                      'panoramaName', trades.panorama_name) AS json
+    (snomed)::text AS "snomed",
+    json_build_object('en', friendly_en_name,
+                      'fr', friendly_fr_name) AS "longName",
+    manufacturer AS "manufacturer",
+    ontario_start_year AS "ontarioStartYear", 
+    ontario_finish_year AS "ontarioFinishYear",
+    prevalence_index AS "prevalenceIndex",
+    panorama_name AS "panoramaName"
   FROM trades;
 
 CREATE OR REPLACE VIEW lots_index AS
   SELECT
-    lots.lot_number,
-    lots.expiry,
-    lots.agent_snomed,
-    lots.trade_panorama_name,
-    json_build_object('lotNumber', lots.lot_number,
-                      'expiry', lots.expiry) AS json
+    lot_number AS "lotNumber",
+    expiry AS "expiry"
   FROM lots;
 
 CREATE MATERIALIZED VIEW schools_daycares_index AS
@@ -265,144 +243,140 @@ CREATE MATERIALIZED VIEW cities_index AS
 WITH NO DATA;
 
 CREATE OR REPLACE VIEW immunization_lookups AS
-  SELECT
-  lower(agents.long_en_name) AS agent_long_en,
-  lower(agents.long_fr_name) AS agent_long_fr,
-  lower(agents.short_en_name) AS agent_short_en,
-  lower(agents.short_fr_name) AS agent_short_fr,
-  agents.prevalence_index,
-  lower(trades.friendly_en_name) AS trade_en,
-  lower(trades.friendly_fr_name) AS trade_fr,
-  jsonb_build_object('agent', jsonb_build_object('snomed', agents.snomed,
-                                               'shortName', jsonb_build_object('en', agents.short_en_name,
-                                                                              'fr', agents.short_fr_name),
-                                               'longName', jsonb_build_object('en', agents.long_en_name,
-                                                                             'fr', agents.long_fr_name),
-                                               'prevalenceIndex', agents.prevalence_index,
-                                               'ontarioStartYear', agents.ontario_start_year,
-                                               'ontarioFinishYear', agents.ontario_finish_year,
-                                               'diseases',((SELECT
-                                                            json_agg(diseases_index.json)
-                                                            FROM diseases_index
-                                                            WHERE diseases_index.snomed = ANY (array_agg(diseases.snomed)::bigint[])))),
-                    'trade',((SELECT
-                              trades_index.json
-                              FROM trades_index
-                              WHERE trades_index.snomed = ANY (array_agg(trades.snomed)::bigint[])))) AS json
-  FROM agents
-  LEFT OUTER JOIN trades_agents ON agents.snomed = trades_agents.agent_snomed
-  LEFT OUTER JOIN trades ON trades_agents.trade_snomed = trades.snomed
-  LEFT OUTER JOIN agents_diseases ON agents.snomed = agents_diseases.agent_snomed
-  LEFT OUTER JOIN diseases ON agents_diseases.disease_snomed = diseases.snomed
-  WHERE agents.is_user_view = true
-  GROUP BY agents.snomed,
-           agents.long_en_name,
-           agents.long_fr_name,
-           agents.short_en_name,
-           agents.short_fr_name,
-           trades.friendly_en_name,
-           trades.friendly_fr_name,
-           trades.snomed
-  UNION
-  SELECT 
-  lower(agents.long_en_name) AS agent_long_en,
-  lower(agents.long_fr_name) AS agent_long_fr,
-  lower(agents.short_en_name) AS agent_short_en,
-  lower(agents.short_fr_name) AS agent_short_fr,
-  agents.prevalence_index,
-  NULL AS trade_en,
-  NULL AS trade_fr,
-  jsonb_build_object('agent', jsonb_build_object('snomed', agents.snomed,
-                                               'shortName', jsonb_build_object('en', agents.short_en_name,
-                                                                              'fr', agents.short_fr_name),
-                                               'longName', jsonb_build_object('en', agents.long_en_name,
-                                                                             'fr', agents.long_fr_name),
-                                               'prevalenceIndex', agents.prevalence_index,
-                                               'ontarioStartYear', agents.ontario_start_year,
-                                               'ontarioFinishYear', agents.ontario_finish_year,
-                                               'diseases',((SELECT
-                                                            json_agg(diseases_index.json)
-                                                            FROM diseases_index
-                                                            WHERE diseases_index.snomed = ANY (array_agg(diseases.snomed)::bigint[])))),
-                    'trade', NULL) AS json
-  FROM agents
-  LEFT OUTER JOIN agents_diseases ON agents.snomed = agents_diseases.agent_snomed
-  LEFT OUTER JOIN diseases ON agents_diseases.disease_snomed = diseases.snomed
-  WHERE agents.is_user_view = true
-  GROUP BY agents.snomed,
-           agents.long_en_name,
-           agents.long_fr_name,
-           agents.short_en_name,
-           agents.short_fr_name
-  ORDER BY prevalence_index,
-           agent_long_en,
-           agent_long_fr;
+
+ SELECT sub_table.agent_long_en,
+    sub_table.agent_long_fr,
+    sub_table.agent_short_en,
+    sub_table.agent_short_fr,
+    sub_table.agent_ordered_diseases_en,
+    sub_table.agent_ordered_diseases_fr,
+    sub_table.trade_en,
+    sub_table.trade_fr,
+    sub_table.agent,
+    sub_table.trade
+   FROM ( SELECT agents.prevalence_index,
+            lower(agents.long_en_name::text) AS agent_long_en,
+            lower(agents.long_fr_name::text) AS agent_long_fr,
+            lower(agents.short_en_name::text) AS agent_short_en,
+            lower(agents.short_fr_name::text) AS agent_short_fr,
+            lower(agents.ordered_diseases_en::text) AS agent_ordered_diseases_en,
+            lower(agents.ordered_diseases_fr::text) AS agent_ordered_diseases_fr,
+            lower(trades.friendly_en_name::text) AS trade_en,
+            lower(trades.friendly_fr_name::text) AS trade_fr,
+            jsonb_build_object('snomed', agents.snomed::text, 'orderedDiseases', jsonb_build_object('en', agents.ordered_diseases_en, 'fr', agents.ordered_diseases_fr), 'shortName', jsonb_build_object('en', agents.short_en_name, 'fr', agents.short_fr_name), 'longName', jsonb_build_object('en', agents.long_en_name, 'fr', agents.long_fr_name), 'prevalenceIndex', agents.prevalence_index, 'ontarioStartYear', agents.ontario_start_year, 'ontarioFinishYear', agents.ontario_finish_year, 'diseases', ( SELECT array_agg(json_build_object('snomed', d.snomed, 'yellowCardOrder', d.yellow_card_order, 'longName', json_build_object('en', d.friendly_en_name, 'fr', d.friendly_fr_name))) AS array_agg
+                   FROM diseases d
+                  WHERE d.snomed = ANY (array_agg(diseases.snomed)))) AS agent,
+            jsonb_build_object('snomed', trades.snomed::text, 'longName', json_build_object('en', trades.friendly_en_name, 'fr', trades.friendly_fr_name), 'manufacturer', trades.manufacturer, 'ontarioStartYear', trades.ontario_start_year, 'ontarioFinishYear', trades.ontario_finish_year, 'prevalenceIndex', trades.prevalence_index, 'panoramaName', trades.panorama_name) AS trade
+           FROM agents
+             JOIN trades_agents ON agents.snomed = trades_agents.agent_snomed
+             JOIN trades ON trades_agents.trade_snomed = trades.snomed
+             LEFT JOIN agents_diseases ON agents.snomed = agents_diseases.agent_snomed
+             LEFT JOIN diseases ON agents_diseases.disease_snomed = diseases.snomed
+          WHERE agents.is_user_view = true
+          GROUP BY agents.prevalence_index, agents.long_en_name, agents.long_fr_name, agents.snomed, trades.snomed
+        UNION
+         SELECT agents.prevalence_index,
+            lower(agents.long_en_name::text) AS agent_long_en,
+            lower(agents.long_fr_name::text) AS agent_long_fr,
+            lower(agents.short_en_name::text) AS agent_short_en,
+            lower(agents.short_fr_name::text) AS agent_short_fr,
+            lower(agents.ordered_diseases_en::text) AS agent_ordered_diseases_en,
+            lower(agents.ordered_diseases_fr::text) AS agent_ordered_diseases_fr,
+            NULL::text AS trade_en,
+            NULL::text AS trade_fr,
+            jsonb_build_object('snomed', agents.snomed::text, 'orderedDiseases', jsonb_build_object('en', agents.ordered_diseases_en, 'fr', agents.ordered_diseases_fr), 'shortName', jsonb_build_object('en', agents.short_en_name, 'fr', agents.short_fr_name), 'longName', jsonb_build_object('en', agents.long_en_name, 'fr', agents.long_fr_name), 'prevalenceIndex', agents.prevalence_index, 'ontarioStartYear', agents.ontario_start_year, 'ontarioFinishYear', agents.ontario_finish_year, 'diseases', ( SELECT array_agg(json_build_object('snomed', d.snomed, 'yellowCardOrder', d.yellow_card_order, 'longName', json_build_object('en', d.friendly_en_name, 'fr', d.friendly_fr_name))) AS array_agg
+                   FROM diseases d
+                  WHERE d.snomed = ANY (array_agg(diseases.snomed)))) AS agent,
+            NULL::jsonb AS trade
+           FROM agents
+             LEFT JOIN agents_diseases ON agents.snomed = agents_diseases.agent_snomed
+             LEFT JOIN diseases ON agents_diseases.disease_snomed = diseases.snomed
+          WHERE agents.is_user_view = true
+          GROUP BY agents.snomed) sub_table
+  ORDER BY sub_table.prevalence_index, sub_table.agent_long_en, sub_table.agent_long_fr;
 
 CREATE OR REPLACE VIEW lot_lookups AS
   SELECT
-    agents.snomed,
-    json_build_object('lots', ((SELECT
-                                json_agg(lots_index.json)
-                                FROM lots_index
-                                WHERE lots_index.agent_snomed = ANY (array_agg(agents.snomed))))) AS json
+    (agents.snomed)::text,
+    ((SELECT
+        array_agg(json_build_object('lotNumber', lot_number,
+                                    'expiry', expiry))
+      FROM lots
+      WHERE lots.agent_snomed = ANY (array_agg(agents.snomed)))) AS lots
   FROM agents
   GROUP BY agents.snomed
   UNION ALL
   SELECT
-    trades.snomed,
-    json_build_object('lots', ((SELECT
-                                json_agg(lots_index.json)
-                                FROM lots_index
-                                WHERE lots_index.trade_panorama_name = ANY (array_agg(trades.panorama_name))))) AS json
+    (trades.snomed)::text,
+    ((SELECT
+        array_agg(json_build_object('lotNumber', lot_number,
+                                    'expiry', expiry))
+      FROM lots
+      WHERE lots.trade_panorama_name = ANY (array_agg(trades.panorama_name)))) AS lots
   FROM trades
   GROUP BY trades.snomed;
 
 CREATE OR REPLACE VIEW retrieval_lookups AS
   SELECT
-    agents.snomed,
-    json_build_object('agent', json_build_object('snomed', agents.snomed,
-                                                 'shortName', json_build_object('en', agents.short_en_name,
-                                                                                'fr', agents.short_fr_name),
-                                                 'longName', json_build_object('en', agents.long_en_name,
-                                                                               'fr', agents.long_fr_name),
-                                                 'prevalenceIndex', agents.prevalence_index,
-                                                 'ontarioStartYear', agents.ontario_start_year,
-                                                 'ontarioFinishYear', agents.ontario_finish_year,
-                                                 'diseases',((SELECT
-                                                              json_agg(diseases_index.json)
-                                                              FROM diseases_index
-                                                              WHERE diseases_index.snomed = ANY (array_agg(diseases.snomed)::bigint[])))),
-                      'trade', null) AS json
+    (agents.snomed)::text,
+    jsonb_build_object('snomed', (agents.snomed)::text,
+                       'orderedDiseases', jsonb_build_object('en', agents.ordered_diseases_en,
+                                                             'fr', agents.ordered_diseases_fr),
+                       'shortName', jsonb_build_object('en', agents.short_en_name,
+                                                       'fr', agents.short_fr_name),
+                       'longName', jsonb_build_object('en', agents.long_en_name,
+                                                      'fr', agents.long_fr_name),
+                       'prevalenceIndex', agents.prevalence_index,
+                       'ontarioStartYear', agents.ontario_start_year,
+                       'ontarioFinishYear', agents.ontario_finish_year,
+                       'diseases', (SELECT
+                                    array_agg(json_build_object('snomed', snomed,
+                                                                'yellowCardOrder', yellow_card_order,
+                                                                'longName', json_build_object ('en', friendly_en_name,
+                                                                                               'fr', friendly_fr_name)))
+                                    FROM diseases AS d
+                                    WHERE d.snomed = ANY (array_agg(diseases.snomed)::bigint[]))) AS agent,
+      NULL AS trade
   FROM agents
   LEFT OUTER JOIN agents_diseases ON agents.snomed = agents_diseases.agent_snomed
   LEFT OUTER JOIN diseases ON agents_diseases.disease_snomed = diseases.snomed
   GROUP BY agents.snomed
   UNION ALL
   SELECT
-    trades.snomed,
-    json_build_object('agent', json_build_object('snomed', agents.snomed,
-                                                 'shortName', json_build_object('en', agents.short_en_name,
-                                                                                'fr', agents.short_fr_name),
-                                                 'longName', json_build_object('en', agents.long_en_name,
-                                                                               'fr', agents.long_fr_name),
-                                                 'prevalenceIndex', agents.prevalence_index,
-                                                 'ontarioStartYear', agents.ontario_start_year,
-                                                 'ontarioFinishYear', agents.ontario_finish_year,
-                                                 'diseases',((SELECT
-                                                              json_agg(diseases_index.json)
-                                                              FROM diseases_index
-                                                              WHERE diseases_index.snomed = ANY (array_agg(diseases.snomed)::bigint[])))),
-                      'trade',((SELECT
-                                trades_index.json
-                                FROM trades_index
-                                WHERE trades_index.snomed = ANY (array_agg(trades.snomed)::bigint[])))) AS json
-    FROM trades
-    LEFT OUTER JOIN trades_agents ON trades.snomed = trades_agents.trade_snomed
-    LEFT OUTER JOIN agents ON trades_agents.agent_snomed = agents.snomed
-    LEFT OUTER JOIN agents_diseases ON agents.snomed = agents_diseases.agent_snomed
-    LEFT OUTER JOIN diseases ON agents_diseases.disease_snomed = diseases.snomed
-    GROUP BY trades.snomed, 
-             agents.snomed;
+    (trades.snomed)::text,
+    jsonb_build_object('snomed', (agents.snomed)::text,
+                       'orderedDiseases', jsonb_build_object('en', agents.ordered_diseases_en,
+                                                             'fr', agents.ordered_diseases_fr),
+                       'shortName', jsonb_build_object('en', agents.short_en_name,
+                                                       'fr', agents.short_fr_name),
+                       'longName', jsonb_build_object('en', agents.long_en_name,
+                                                      'fr', agents.long_fr_name),
+                       'prevalenceIndex', agents.prevalence_index,
+                       'ontarioStartYear', agents.ontario_start_year,
+                       'ontarioFinishYear', agents.ontario_finish_year,
+                       'diseases', (SELECT
+                                    array_agg(json_build_object('snomed', snomed,
+                                                                'yellowCardOrder', yellow_card_order,
+                                                                'longName', json_build_object ('en', friendly_en_name,
+                                                                                               'fr', friendly_fr_name)))
+                                    FROM diseases AS d
+                                    WHERE d.snomed = ANY (array_agg(diseases.snomed)::bigint[]))) AS agent,
+    jsonb_build_object('snomed', (trades.snomed)::text,
+                       'longName', json_build_object('en', trades.friendly_en_name,
+                                                     'fr', trades.friendly_fr_name),
+                       'manufacturer', trades.manufacturer,
+                       'ontarioStartYear', trades.ontario_start_year,
+                       'ontarioFinishYear', trades.ontario_finish_year,
+                       'prevalenceIndex', trades.prevalence_index,
+                       'panoramaName', trades.panorama_name) AS trade
+  FROM agents
+  INNER JOIN trades_agents ON agents.snomed = trades_agents.agent_snomed
+  INNER JOIN trades ON trades_agents.trade_snomed = trades.snomed
+  LEFT OUTER JOIN agents_diseases ON agents.snomed = agents_diseases.agent_snomed
+  LEFT OUTER JOIN diseases ON agents_diseases.disease_snomed = diseases.snomed
+  GROUP BY
+  trades.snomed,
+  agents.snomed;
 
 -- CREATE FUNCTIONS -------------------------------------------------------------------------------
 
