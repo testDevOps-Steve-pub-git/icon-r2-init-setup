@@ -27,7 +27,7 @@ var checkService = (serviceName) => {
 
 var createService = (serviceName, userDefinedName) => {
   return new Promise((resolve, reject) => {
-    exec('cf create-service ' + serviceName + ' Standard ' + userDefinedName, (error, stdout, stderr) => {
+    exec('cf create-service ' + serviceName + ' Enterprise ' + userDefinedName, (error, stdout, stderr) => {
       if (error) {
         reject(error)
       } else {
