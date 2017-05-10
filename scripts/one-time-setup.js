@@ -49,13 +49,13 @@ var createServiceKey = (userDefinedName, credentialsName) => {
   })
 }
 
-var promisify = (serviceName, userDefinedName) => {
+var promisify = (serviceName, userDefinedName, credentialsName) => {
   if (serviceName && userDefinedName) {
     checkService(userDefinedName).then((result) => {
       console.log('result', serviceName, userDefinedName);
       createService(serviceName, userDefinedName).then((result) => {
          console.log(result)
-        createServiceKey(userDefinedName, 'Credentials-1').then(result => {
+        createServiceKey(userDefinedName, credentialsName).then(result => {
           console.log(result)
         }, (error) => {
           console.log(error)
@@ -76,4 +76,4 @@ var promisify = (serviceName, userDefinedName) => {
 }
 
 console.log('Creating services...')
-promisify(process.argv[2], process.argv[3])
+promisify(process.argv[2], process.argv[3], process.argv[4])
