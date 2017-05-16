@@ -456,7 +456,7 @@ BEGIN
 
   SELECT
     values ->> 'lotNumber' AS lot_number,
-    to_date((values ->> 'lotExpiryDate'), 'MM-DD-YYYY')  AS expiry,
+    to_date((values ->> 'lotExpiryDate'), 'YY-MM-DD')  AS expiry,
     (values ->> 'agentSnomedCode')::bigint AS agent_snomed,
     values ->> 'tradeName' AS trade_panorama_name
   FROM (
