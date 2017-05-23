@@ -1,12 +1,13 @@
+'use strict'
 var exec = require('child_process').exec
 
-let esServiceName = 'compose-for-elasticsearch'
-let pglServiceName = 'compose-for-postgresql'
-let rmqServiceName = 'compose-for-rabbitmq'
+// let esServiceName = 'compose-for-elasticsearch'
+// let pglServiceName = 'compose-for-postgresql'
+// let rmqServiceName = 'compose-for-rabbitmq'
 
-let esUserDefinedName = 'icon-elasticsearch'
-let pglUserDefinedName = 'icon-postgresql'
-let rmqUserDefinedName = 'icon-rabbitmq'
+// let esUserDefinedName = 'icon-elasticsearch'
+// let pglUserDefinedName = 'icon-postgresql'
+// let rmqUserDefinedName = 'icon-rabbitmq'
 
 var checkService = (serviceName) => {
   return new Promise((resolve, reject) => {
@@ -26,7 +27,7 @@ var checkService = (serviceName) => {
 
 var createService = (serviceName, userDefinedName) => {
   return new Promise((resolve, reject) => {
-    exec('cf create-service ' + serviceName + ' Standard ' + userDefinedName, (error, stdout, stderr) => {
+    exec('cf create-service ' + serviceName + ' Enterprise ' + userDefinedName, (error, stdout, stderr) => {
       if (error) {
         reject(error)
       } else {
@@ -48,28 +49,31 @@ var createServiceKey = (userDefinedName, credentialsName) => {
   })
 }
 
-var promisify = (serviceName, userDefinedName) => {
-  checkService(userDefinedName).then((result) => {
-    console.log(result)
-    createService(serviceName, userDefinedName).then((result) => {
-       console.log(result)
-      createServiceKey(userDefinedName, 'Credentials-1').then(result => {
-        console.log(result)
+var promisify = (serviceName, userDefinedName, credentialsName) => {
+  if (serviceName && userDefinedName) {
+    checkService(userDefinedName).then((result) => {
+      console.log('result', serviceName, userDefinedName);
+      createService(serviceName, userDefinedName).then((result) => {
+         console.log(result)
+        createServiceKey(userDefinedName, credentialsName).then(result => {
+          console.log(result)
+        }, (error) => {
+          console.log(error)
+          process.exit(1)
+        })
       }, (error) => {
         console.log(error)
         process.exit(1)
       })
-    }, (error) => {
+    }).catch(error =>{
       console.log(error)
       process.exit(1)
-    })
-  }).catch(error =>{
-    console.log(error)
+    }) 
+  } else {
+    console.log('Please provide the type of service you would like to create and the name as arguments');
     process.exit(1)
-  })
+  }
 }
 
 console.log('Creating services...')
-promisify(esServiceName, esUserDefinedName)
-promisify(pglServiceName, pglUserDefinedName)
-promisify(rmqServiceName, rmqUserDefinedName)
+promisify(process.argv[2], process.argv[3], process.argv[4])
