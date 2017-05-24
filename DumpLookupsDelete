@@ -1,0 +1,1 @@
+rm agents.sql agents_diseases.sql diseases.sql schools_daycares.sql trades.sql trades_agents.sql

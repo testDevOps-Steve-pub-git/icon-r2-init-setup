@@ -1,0 +1,6 @@
+pg_dump -U admin -d compose -a -t agents > agents.sql
+pg_dump -U admin -d compose -a -t diseases > diseases.sql
+pg_dump -U admin -d compose -a -t trades > trades.sql
+pg_dump -U admin -d compose -a -t agents_diseases > agents_diseases.sql
+pg_dump -U admin -d compose -a -t trades_agents > trades_agents.sql
+pg_dump -U admin -d compose -a -t schools_daycares > schools_daycares.sql
