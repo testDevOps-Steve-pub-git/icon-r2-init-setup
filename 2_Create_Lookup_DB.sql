@@ -68,7 +68,7 @@ CREATE TABLE diseases
 CREATE TABLE lots
 (
   lot_id serial,
-  lot_number varchar(15),
+  lot_number varchar(100),
   expiry date,
   agent_snomed bigint,
   trade_panorama_name varchar(100),
@@ -397,18 +397,18 @@ BEGIN
   -- tranform the data
   INSERT INTO schools_daycares (phu, org_type, name, identifier, address, postal_code, city)
 
-  SELECT
-    values->>'phu' AS phu,
-    values->>'orgType' AS org_type,
-    values->>'name' AS name,
-    values->>'identifier' AS identifier,
-    values->>'streetAddress' AS address,
-    values->>'postalCode' AS postal_code,
-    values->>'city' AS city
-  FROM (
-    SELECT json_array_elements(replace(values,'\','\\')::json) AS values -- '
+  WITH fields_rowset AS (
+    SELECT json_array_elements(values::json) as values
     FROM load_schools_daycares
-  ) a;
+  ) SELECT DISTINCT
+      values->>'phu' AS phu,
+      values->>'orgType' AS org_type,
+      values->>'name' AS name,
+      values->>'identifier' AS identifier,
+      values->>'streetAddress' AS address,
+      values->>'postalCode' AS postal_code,
+      values->>'city' AS city
+  FROM fields_rowset;
 
   -- post-flight
   DELETE FROM load_schools_daycares;
@@ -434,7 +434,7 @@ CREATE TABLE IF NOT EXISTS load_lots (values text);
 CREATE TABLE IF NOT EXISTS lots
 (
 	lot_id serial,
-	lot_number varchar(15),
+	lot_number varchar(100),
   expiry date,
   agent_snomed bigint,
   trade_panorama_name varchar(100),
@@ -460,7 +460,7 @@ BEGIN
     (values ->> 'agentSnomedCode')::bigint AS agent_snomed,
     values ->> 'tradeName' AS trade_panorama_name
   FROM (
-    SELECT json_array_elements(replace(values,'\','\\')::json) AS values -- '
+    SELECT json_array_elements(values::json) AS values
     FROM load_lots
   ) a;
 
