@@ -30,3 +30,20 @@ ALTER TABLE ONLY "Immun_Submission"
 ALTER TABLE ONLY "Submission_Attachment"
     ADD CONSTRAINT "Submission_Attachment_pkey" PRIMARY KEY ("Id");
 
+CREATE OR REPLACE FUNCTION file_upload_check() RETURNS trigger AS $file_upload_check$
+    DECLARE
+        counter_ integer := 0;
+    BEGIN
+        -- Count all records with matching transaction id
+        SELECT count(*) into counter_ FROM public."Submission_Attachment" WHERE "Transaction_Id" = NEW."Transaction_Id";
+        -- Check amount of records matching transaction id
+        IF counter_ >= 2 THEN
+            RAISE EXCEPTION 'CONFLICT: There cannot be more than two files associated with a transaction id';
+        END IF;
+        -- Save the record
+        RETURN NEW;
+    END;
+$file_upload_check$ LANGUAGE plpgsql;
+
+CREATE TRIGGER file_upload_check BEFORE INSERT ON "Submission_Attachment"
+    FOR EACH ROW EXECUTE PROCEDURE file_upload_check();

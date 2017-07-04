@@ -75,6 +75,14 @@ CREATE TABLE lots
   CONSTRAINT lots_pkey PRIMARY KEY (lot_id)
 );
 
+CREATE TABLE public_health_units
+(
+  id smallint NOT NULL UNIQUE,
+  name varchar(100),
+  acronym varchar(20),
+  app_version varchar(10)
+);
+
 CREATE TABLE trades_agents
 (
     agent_snomed bigint,

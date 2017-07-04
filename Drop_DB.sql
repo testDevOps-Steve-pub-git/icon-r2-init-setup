@@ -20,6 +20,7 @@ DROP TABLE IF EXISTS "diseases" CASCADE;
 DROP TABLE IF EXISTS "agents" CASCADE;
 DROP TABLE IF EXISTS "trades" CASCADE;
 DROP TABLE IF EXISTS "geocodes" CASCADE;
+DROP TABLE IF EXISTS "public_health_units" CASCADE;
 DROP TABLE IF EXISTS "schools_daycares" CASCADE;
 
 -- Drop submission tables

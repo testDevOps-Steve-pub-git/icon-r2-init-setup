@@ -248,6 +248,48 @@ COPY trades (snomed, friendly_en_name, friendly_fr_name, manufacturer, ontario_s
 19321000087101	Zostavax® II	Zostavax® II	MC	\N	\N	9	Zos Zostavax II MC
 \.
 
+-- INSERT: public_health_units;
+
+COPY public_health_units (id, name, acronym, app_version) FROM stdin;
+6	Grey Bruce Health Unit	GBHU	full
+9	Huron County Health Unit	HCHU	full
+11	Oxford County Public Health	OCPH	full
+12	Simcoe Muskoka District Health Unit	SMDHU	full
+13	Hastings and Prince Edward Counties Health Unit	HPECHU	full
+14	Peel Public Health	PEEL	full
+15	Brant County Health Unit	BCHU	full
+16	Leeds, Grenville and Lanark District Health Unit	LGL	full
+17	Chatham-Kent Health Unit	CKPHU	full
+18	Eastern Ontario Health Unit	EOHU	full
+19	Wellington-Dufferin-Guelph Health Unit	WDGPH	full
+20	Hamilton Public Health & Social Services	HPH	full
+21	Northwestern Health Unit	NWHU	full
+22	Kingston, Frontenac and Lennox & Addington Health Unit	KFLA	full
+23	Middlesex-London Health Unit	MLHU	full
+24	Timiskaming Health Unit	TIMHU	full
+25	York Region Public Health Services	YRPHU	full
+26	North Bay Parry Sound District Health Unit	NBPSDHU	full
+27	Halton Region Health Department	HRHD	full
+28	Ottawa Public Health	OPH	full
+29	Renfrew County and District Health Unit	RE	full
+30	Peterborough County-City Health Unit	PCCHU	full
+31	Lambton Health Unit	LPH	full
+32	Haliburton, Kawartha, Pine Ridge District Health Unit	HKPR	full
+33	Algoma Public Health Unit	APH	full
+34	Haldimand-Norfolk Health Unit	HNHU	full
+35	Elgin-St. Thomas Health Unit	ESTHU	full
+36	Perth District Health Unit	PDHU	full
+40	Sudbury and District Health Unit	SDHU	full
+41	Niagara Region Public Health Department	NRPH	full
+46	Thunder Bay District Health Unit	TBDHU	full
+54	Porcupine Health Unit	PO	full
+55	Toronto Public Health	TPH	full
+56	Region of Waterloo, Public Health	ROWPH	full
+57	Durham Region Health Department	DRHD	full
+58	Windsor-Essex County Health Unit	WECHU	full
+8871	XXSupportPHU1	XXSUPPORTPHU1	full
+\.
+
 -- INSERT: agents_diseases;
 
 COPY agents_diseases (agent_snomed, disease_snomed) FROM stdin;
